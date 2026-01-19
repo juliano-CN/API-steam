@@ -1,4 +1,14 @@
 #%%
+appid = 37960
+
+url = "https://store.steampowered.com/api/appdetails?appids={id}"
+
+resp = requests.get(url.format(id=appid))
+print(resp.status_code)
+if resp.status_code == 200:
+    print(resp.json()[str(appid)]["data"]["release_date"])
+
+#%%
 import requests
 import json
 import pandas as pd
@@ -24,7 +34,6 @@ import pandas as pd
 #df = pd.read_csv("Data/steamData.csv")
 df = pd.read_sql_table("gamesData","sqlite:///Data/database.db")
 df["release_date"].to_dict()
-
 
 #%%
 import pandas as pd

@@ -1,7 +1,7 @@
 import requests
 import time
 import pandas as pd
-import sqlalchemy
+from sqlalchemy import create_engine,text
 
 #variaveis globais
 session = requests.Session()
@@ -31,15 +31,15 @@ def MakeRequestReview(steam_appid,retries = 3,waitTime = 10, timeout=10):
 #extração dos dados
 def getData(appids,wait_time = 1.5):
     #conexao com o db
-    engine = sqlalchemy.create_engine("sqlite:///Data/database.db")
+    engine = create_engine("sqlite:///Data/database.db")
 
     #carregar os dados caso existam, senao cria uma lista vazia
-    try:
-        data = pd.read_sql_table("gamesReview",engine)
-        data = data.to_dict(orient="records")
-    except Exception as e:
-        print("Erro ao carregar dados existentes: ", e)
-        data = []
+    #try:
+    #    data = pd.read_sql_table("gamesReview",engine)
+    #    data = data.to_dict(orient="records")
+    #except Exception as e:
+    #    print("Erro ao carregar dados existentes: ", e)
+    data = []
     
     #importar a tabela de nomes
     #games_list = pd.read_csv("Data/appidsList.csv",sep = ",")
@@ -57,14 +57,30 @@ def getData(appids,wait_time = 1.5):
                     new_row = data_review
 
                     existing_ids.add(item)
-
-                    df = pd.DataFrame([new_row])
-                    df.to_sql("gamesReview",engine,if_exists="append",index=False)
+                    data.append(new_row)
+                    #df = pd.DataFrame([new_row])
+                    #df.to_sql("gamesReview",engine,if_exists="append",index=False)
 
             except Exception as e:
                 print("erro: ", e)
 
             time.sleep(wait_time)
+
+
+    #salvar no banco de dados
+    data_df = pd.DataFrame(data)
+    cols = ", ".join(data_df.columns)
+    placeholders = ", ".join([f":{c}" for c in data_df.columns])
+
+    query = text(f"""
+            INSERT OR IGNORE INTO gamesReview ({cols})
+            VALUES ({placeholders})
+            """)
+
+    data = data_df.to_dict(orient="records")
+
+    with engine.begin() as conn:
+        conn.execute(query, data)
 
 if __name__ == "__main__":
     getData()

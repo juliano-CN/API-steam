@@ -1,34 +1,66 @@
 #%%
 import pandas as pd
 import json
+import dateparser
+import sqlalchemy
+from sqlalchemy import text
 
-df = pd.read_sql_table("gamesData","sqlite:///Data/database.db")
+engine = sqlalchemy.create_engine("sqlite:///Data/database.db")
+df = pd.read_sql_table("temporaryData",engine)
 dfCopy = df.copy()
-dfCopy.columns
 
-#%%
+#deletar colunas que nao serão usadas
+dfCopy = dfCopy.drop(columns=["packages","package_groups","ratings"],axis=1,inplace=False)
+
+#atualizar a coluna release_date
 x = dfCopy['release_date'].fillna('{}').apply(json.loads)
 df = pd.DataFrame(x.tolist())
-df["date"] = pd.to_datetime(df["date"],format="mixed")
-df
 
-#%%
-x = dfCopy['price_overview'].fillna('{}').apply(json.loads)
-df = pd.DataFrame(x.tolist())
-df
+mask = ~df["coming_soon"]
 
-#%%
+dfCopy["coming_soon"] = df["coming_soon"]
+dfCopy["release_date"] = df.loc[mask,'date'].apply(lambda x: dateparser.parse(str(x)))
+
+#atualizar colunas que são mais de um valor em formato de lista
 x = dfCopy['genres'].fillna('{}').apply(json.loads)
-x.apply(lambda y: [d['description'] for d in y] if isinstance(y, list) else [])
+dfCopy['genres'] = x.apply(lambda y: [d['description'] for d in y] if isinstance(y, list) else [])
+dfCopy['genres'] = dfCopy['genres'].str.join(",")
 
-#%%
 x = dfCopy['categories'].fillna('{}').apply(json.loads)
-x.apply(lambda y: [d['description'] for d in y] if isinstance(y, list) else [])
+dfCopy['categories'] = x.apply(lambda y: [d['description'] for d in y] if isinstance(y, list) else [])
+dfCopy['categories'] = dfCopy['categories'].str.join(",")
 
-#%%
+#plataformas
 x = dfCopy["platforms"].apply(json.loads)
 df = pd.DataFrame(x.tolist())
-df
+dfCopy["windows"] = df["windows"]
+dfCopy["mac"] = df["mac"]
+dfCopy["linux"] = df["linux"]
+dfCopy = dfCopy.drop(columns=["platforms"],axis=1,inplace=False)
+
+#transformar a coluna 'recommendations' para int
+x = dfCopy["recommendations"].fillna('{}').apply(json.loads)
+dfCopy["recommendations"] = pd.DataFrame(x.tolist())["total"]
+
+#salvar no banco de dados
+cols = ", ".join(dfCopy.columns)
+placeholders = ", ".join([f":{c}" for c in dfCopy.columns])
+
+query = text(f"""
+        INSERT OR IGNORE INTO gamesData ({cols})
+        VALUES ({placeholders})
+        """)
+
+data = dfCopy.to_dict(orient="records")
+
+with engine.begin() as conn:
+    conn.execute(query, data)
 
 #%%
-dfCopy['demos'].isna().value_counts()
+#print(dfCopy.info())
+print(dfCopy.columns)
+#print(dfCopy.head())
+dfCopy.to_csv("Data/transformData.csv",index=False)
+
+#%%
+dfCopy

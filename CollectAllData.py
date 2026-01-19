@@ -2,6 +2,7 @@ import requests
 import time
 import pandas as pd
 import sqlalchemy
+from sqlalchemy import text
 import json
 
 #variaveis globais
@@ -48,7 +49,7 @@ def getData(appids,wait_time = 1.5):
 
     #carregar os dados caso existam, senao cria uma lista vazia
     try:
-        data = pd.read_sql_table("gamesData",engine)
+        data = pd.read_sql_table("temporaryData",engine)
         data = data.to_dict(orient="records")
     except Exception as e:
         print("Erro ao carregar dados existentes: ", e)
@@ -59,7 +60,7 @@ def getData(appids,wait_time = 1.5):
     #appid = appids#games_list["appid"][0:15]
     #existing_ids = {row["steam_appid"] for row in data}
 
-
+    #importar a tabela de nomes
     existing_ids = {int(row["steam_appid"]) for row in data if row["steam_appid"] is not None}
     appid = [int(x) for x in appids]
 
@@ -79,12 +80,19 @@ def getData(appids,wait_time = 1.5):
                     existing_ids.add(item)
 
                     df = pd.DataFrame([new_row])
-                    df.to_sql("gamesData",engine,if_exists="append",index=False)
+                    df.to_sql("temporaryData",engine,if_exists="append",index=False)
             except Exception as e:
                 print("erro: ", e)
                 
 
             time.sleep(wait_time)
+    
+    #with engine.begin() as conn:
+    #    conn.execute(text("""INSERT OR IGNORE INTO gamesData 
+    #                    SELECT *
+    #                    FROM temporaryData;
+    #                    """))
+
     print("Processo concluído.")
     print("Valores faltantes: ", missing_values)
 

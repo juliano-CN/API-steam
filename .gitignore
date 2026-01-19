@@ -3,3 +3,7 @@
 #Ignorar o banco de dados e arquivos CSV
 *.db
 *.csv
+
+
+links.txt
+dateTest.py

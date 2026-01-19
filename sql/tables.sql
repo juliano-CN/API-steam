@@ -2,5 +2,6 @@
 .tables
 
 --variaveis das tabelas
-.schema gamesData
+.schema temporaryData
 .schema gamesReview
+.schema gamesData
