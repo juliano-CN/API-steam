@@ -2,10 +2,9 @@
 import pandas as pd
 import json
 import dateparser
-import sqlalchemy
-from sqlalchemy import text
+from sqlalchemy import create_engine,text
 
-engine = sqlalchemy.create_engine("sqlite:///Data/database.db")
+engine = create_engine("sqlite:///Data/database.db")
 df = pd.read_sql_table("temporaryData",engine)
 dfCopy = df.copy()
 
@@ -41,6 +40,14 @@ dfCopy = dfCopy.drop(columns=["platforms"],axis=1,inplace=False)
 #transformar a coluna 'recommendations' para int
 x = dfCopy["recommendations"].fillna('{}').apply(json.loads)
 dfCopy["recommendations"] = pd.DataFrame(x.tolist())["total"]
+
+#preços
+df = dfCopy["price_overview"].fillna('{}').apply(json.loads)
+df = pd.DataFrame(df.tolist())
+
+dfCopy["currency"] = df["currency"]
+dfCopy["inicial_price"] = df["initial"]/100
+dfCopy = dfCopy.drop(columns=["price_overview"],axis=1,inplace=False)
 
 #salvar no banco de dados
 cols = ", ".join(dfCopy.columns)

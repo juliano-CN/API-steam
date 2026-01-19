@@ -16,7 +16,6 @@ CREATE TABLE IF NOT EXISTS "gamesData"(
 	developers TEXT  ,
 	publishers TEXT  ,
 	demos TEXT  ,
-	price_overview TEXT  ,
 	categories TEXT  ,
 	genres TEXT  ,
 	release_date TEXT  ,
@@ -26,7 +25,9 @@ CREATE TABLE IF NOT EXISTS "gamesData"(
 	coming_soon BOOLEAN  ,
 	windows BOOLEAN ,
 	mac BOOLEAN , 
-	linux BOOLEAN
+	linux BOOLEAN ,
+	currency TEXT ,
+	inicial_price FLOAT
 );
 
 --tabela de reviews

@@ -40,3 +40,14 @@ import pandas as pd
 games_list = pd.read_csv("Data/appidsList.csv",sep = ",")
 appid = games_list["appid"]
 len(appid)
+
+#%% 
+import pandas as pd
+import json
+
+df = pd.read_sql_table("gamesData","sqlite:///Data/database.db")
+df = df["price_overview"].fillna('{}').apply(json.loads)
+df = pd.DataFrame(df.tolist())
+#print(df.head())
+print(df["currency"].value_counts())
+#print(df["initial"]/100)
