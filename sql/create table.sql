@@ -44,7 +44,9 @@ CREATE TABLE IF NOT EXISTS "gamesData"(
 	demos TEXT ,
 	movies TEXT ,
 	achievements TEXT ,
-	reviews TEXT
+	reviews TEXT,
+	legal_notice TEXT,
+	drm_notice TEXT
 );
 
 --tabela de reviews
