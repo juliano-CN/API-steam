@@ -1,7 +1,7 @@
 import requests
 import time
 import pandas as pd
-from sqlalchemy import create_engine,text
+from sqlalchemy import text
 
 #variaveis globais
 session = requests.Session()
@@ -29,9 +29,9 @@ def MakeRequestReview(steam_appid,retries = 3,waitTime = 10, timeout=10):
     return None
 
 #extração dos dados
-def getData(appids,wait_time = 1.5):
+def getData(appid,engine,waitTime = 1.5):
     #conexao com o db
-    engine = create_engine("sqlite:///Data/database.db")
+    
 
     #carregar os dados caso existam, senao cria uma lista vazia
     #try:
@@ -39,48 +39,50 @@ def getData(appids,wait_time = 1.5):
     #    data = data.to_dict(orient="records")
     #except Exception as e:
     #    print("Erro ao carregar dados existentes: ", e)
-    data = []
+    #data = []
     
     #importar a tabela de nomes
     #games_list = pd.read_csv("Data/appidsList.csv",sep = ",")
-    appid = appids#games_list["appid"][0:10]
+    #appid = appids#games_list["appid"][0:10]
 
-    existing_ids = {row["steam_appid"] for row in data}
+    #existing_ids = {row["steam_appid"] for row in data}
 
-    for i,item in enumerate(appid):
-        print("Jogo nùmero ", i + 1 ," / ", len(appid),". steam_appid: ", item)
-        if item not in existing_ids:
-            try:
-                data_review = MakeRequestReview(item)
-
-                if data_review:
-                    new_row = data_review
-
-                    existing_ids.add(item)
-                    data.append(new_row)
-                    #df = pd.DataFrame([new_row])
-                    #df.to_sql("gamesReview",engine,if_exists="append",index=False)
-
-            except Exception as e:
-                print("erro: ", e)
-
-            time.sleep(wait_time)
+    #for i,item in enumerate(appid):
+        
+        #if item not in existing_ids:
+    try:
+        data_review = MakeRequestReview(appid)
+        if data_review:
+            return data_review
+            #new_row = data_review
+            #existing_ids.add(item)
+            #data.append(new_row)
+            #df = pd.DataFrame([new_row])
+            #df.to_sql("gamesReview",engine,if_exists="append",index=False)
+    except Exception as e:
+        print("erro: ", e)
+    
+    time.sleep(waitTime)
+    return None
+    
+    
+    
 
 
     #salvar no banco de dados
-    data_df = pd.DataFrame(data)
-    cols = ", ".join(data_df.columns)
-    placeholders = ", ".join([f":{c}" for c in data_df.columns])
+    #data_df = new_row#pd.DataFrame(data)
+    #cols = ", ".join(data_df.columns)
+    #placeholders = ", ".join([f":{c}" for c in data_df.columns])
 
-    query = text(f"""
-            INSERT OR IGNORE INTO gamesReview ({cols})
-            VALUES ({placeholders})
-            """)
-
-    data = data_df.to_dict(orient="records")
-
-    with engine.begin() as conn:
-        conn.execute(query, data)
+#    query = text(f"""
+#            INSERT OR IGNORE INTO gamesReview ({cols})
+#            VALUES ({placeholders})
+#            """)
+#
+#    data = data_df.to_dict(orient="records")
+#
+#    with engine.begin() as conn:
+#        conn.execute(query, data)
 
 if __name__ == "__main__":
     getData()

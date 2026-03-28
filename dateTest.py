@@ -1,13 +1,16 @@
 #%%
-appid = 37960
+import requests
+import json
+
+appid = 3003300
 
 url = "https://store.steampowered.com/api/appdetails?appids={id}"
 
 resp = requests.get(url.format(id=appid))
 print(resp.status_code)
 if resp.status_code == 200:
-    print(resp.json()[str(appid)]["data"]["release_date"])
-
+    d = resp.json()[str(appid)]["data"]
+d.get("categories")
 #%%
 import requests
 import json
@@ -51,3 +54,9 @@ df = pd.DataFrame(df.tolist())
 #print(df.head())
 print(df["currency"].value_counts())
 #print(df["initial"]/100)
+
+#%%
+#criar .csv
+import pandas as pd
+df = pd.read_sql_table("temporaryData","sqlite:///Data/database.db")
+df.to_csv("Data/gamesData.csv",index=False)
