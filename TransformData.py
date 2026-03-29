@@ -1,35 +1,41 @@
 #%%
 import pandas as pd
 import json
-import dateparser
-from sqlalchemy import create_engine,text
+import dateparser #converte datas de diferentes formatos
+import sqlite3
 
-engine = create_engine("sqlite:///Data/database.db")
-df = pd.read_sql_table("temporaryData",engine)
-dfCopy = df.copy()
+#conecta ao banco de dados
+conn = sqlite3.connect("Data/database.db")
+cursor = conn.cursor()
 
-#deletar colunas que nao serão usadas
-dfCopy = dfCopy.drop(columns=["packages","package_groups","ratings"],axis=1,inplace=False)
+#le o arquivo sql da querry
+with open("sql/data.sql", "r") as file:
+    query = file.read()
+
+#cria um dataFrame da querry
+dfCopy = pd.read_sql_query(query, conn)
 
 #atualizar a coluna release_date
 x = dfCopy['release_date'].fillna('{}').apply(json.loads)
 df = pd.DataFrame(x.tolist())
 
-mask = ~df["coming_soon"]
+mask = ~df["coming_soon"]#se coming_soon e verdadeiro
 
-dfCopy["coming_soon"] = df["coming_soon"]
-dfCopy["release_date"] = df.loc[mask,'date'].apply(lambda x: dateparser.parse(str(x)))
+dfCopy.insert(loc=11, column="coming_soon", value=df["coming_soon"])
+dfCopy["release_date"] = df['date'].apply(lambda x: dateparser.parse(str(x)))
 
 #atualizar colunas que são mais de um valor em formato de lista
+#genres (generos)
 x = dfCopy['genres'].fillna('{}').apply(json.loads)
 dfCopy['genres'] = x.apply(lambda y: [d['description'] for d in y] if isinstance(y, list) else [])
 dfCopy['genres'] = dfCopy['genres'].str.join(",")
 
+#categories (categorias)
 x = dfCopy['categories'].fillna('{}').apply(json.loads)
 dfCopy['categories'] = x.apply(lambda y: [d['description'] for d in y] if isinstance(y, list) else [])
 dfCopy['categories'] = dfCopy['categories'].str.join(",")
 
-#plataformas
+#platforms (plataformas)
 x = dfCopy["platforms"].apply(json.loads)
 df = pd.DataFrame(x.tolist())
 dfCopy["windows"] = df["windows"]
@@ -41,7 +47,7 @@ dfCopy = dfCopy.drop(columns=["platforms"],axis=1,inplace=False)
 x = dfCopy["recommendations"].fillna('{}').apply(json.loads)
 dfCopy["recommendations"] = pd.DataFrame(x.tolist())["total"]
 
-#preços
+##preços
 df = dfCopy["price_overview"].fillna('{}').apply(json.loads)
 df = pd.DataFrame(df.tolist())
 
@@ -49,25 +55,4 @@ dfCopy["currency"] = df["currency"]
 dfCopy["inicial_price"] = df["initial"]/100
 dfCopy = dfCopy.drop(columns=["price_overview"],axis=1,inplace=False)
 
-#salvar no banco de dados
-cols = ", ".join(dfCopy.columns)
-placeholders = ", ".join([f":{c}" for c in dfCopy.columns])
-
-query = text(f"""
-        INSERT OR IGNORE INTO gamesData ({cols})
-        VALUES ({placeholders})
-        """)
-
-data = dfCopy.to_dict(orient="records")
-
-with engine.begin() as conn:
-    conn.execute(query, data)
-
-#%%
-#print(dfCopy.info())
-print(dfCopy.columns)
-#print(dfCopy.head())
-dfCopy.to_csv("Data/transformData.csv",index=False)
-
-#%%
-dfCopy
+dfCopy.to_csv("Data/steam_games.csv", index=False)
