@@ -10,7 +10,7 @@ missing_values = []
 #steam_appid,numero de tentativas, tempo de espera,tempo de espera da resposta do servidor
 def MakeRequestGenre(steam_appid,retries = 3,waitTime = 10, timeout=10):
     #url da API
-    urlGenre = "https://store.steampowered.com/api/appdetails?appids={id}"
+    urlGenre = "https://store.steampowered.com/api/appdetails?appids={id}&language=english"
 
     #tenta fazer a requisição no máximo 3 vezes, se falhar todas as vezes, retorna None 
     for i in range(retries):
@@ -46,4 +46,8 @@ def getData(appid,wait_time = 1.5):
     return None
 
 if __name__ == "__main__":
-    getData()
+    import pandas as pd
+    example = getData(281990)
+    example = pd.DataFrame([example])
+    example.to_csv("Data/example.csv",index=False)
+    print(example)

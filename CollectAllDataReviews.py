@@ -6,7 +6,7 @@ session = requests.Session()
 
 #reviews positivo/negativo
 def MakeRequestReview(steam_appid,retries = 3,waitTime = 10, timeout=10):  
-    urlReview = "https://store.steampowered.com/appreviews/{id}?json=1&language=all"
+    urlReview = "https://store.steampowered.com/appreviews/{id}?json=1&language=english"
 
     for i in range(retries):
         respReview = session.get(urlReview.format(id=steam_appid),timeout=timeout)
@@ -40,4 +40,5 @@ def getData(appid,waitTime = 1.5):
     return None
 
 if __name__ == "__main__":
-    getData()
+    example = getData(281990)
+    print(example)

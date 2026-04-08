@@ -47,7 +47,7 @@ dfCopy = dfCopy.drop(columns=["platforms"],axis=1,inplace=False)
 x = dfCopy["recommendations"].fillna('{}').apply(json.loads)
 dfCopy["recommendations"] = pd.DataFrame(x.tolist())["total"]
 
-##preços
+#preços
 df = dfCopy["price_overview"].fillna('{}').apply(json.loads)
 df = pd.DataFrame(df.tolist())
 
@@ -55,4 +55,12 @@ dfCopy["currency"] = df["currency"]
 dfCopy["inicial_price"] = df["initial"]/100
 dfCopy = dfCopy.drop(columns=["price_overview"],axis=1,inplace=False)
 
+#metacritc
+df = dfCopy["metacritic"].fillna('{}').apply(json.loads)
+df = pd.DataFrame(df.tolist())
+
+dfCopy["metacritic"] = df["score"]
+
+
+#criar o .csv
 dfCopy.to_csv("Data/steam_games.csv", index=False)

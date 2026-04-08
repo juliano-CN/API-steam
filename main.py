@@ -13,7 +13,7 @@ def load_data():
 
     #carrega a lista de appids
     games_list = pd.read_csv("Data/appidsList.csv",sep = ",")
-    appid = games_list["appid"].sample(n=5000,replace=False)
+    appid = games_list["appid"].sample(n=6000,replace=False)
 
     #cria a conexão com o banco de dados (.db)
     engine = create_engine("sqlite:///Data/database.db")
